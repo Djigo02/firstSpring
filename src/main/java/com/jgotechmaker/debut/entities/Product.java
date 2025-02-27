@@ -1,6 +1,15 @@
 package com.jgotechmaker.debut.entities;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "products")
 public class Product {
+    @Id
+    @GeneratedValue(
+            strategy = GenerationType.IDENTITY
+    )
+    private Integer id;
     private String reference;
     private String designation;
     private Integer quantity ;
@@ -14,6 +23,14 @@ public class Product {
         this.designation = designation;
         this.quantity = quantity;
         this.price = price;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
     }
 
     public String getReference() {
