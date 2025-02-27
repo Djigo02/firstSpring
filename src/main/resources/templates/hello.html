@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Produits</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<div class="container mt-5">
+    <div class="row">
+        <h2 class="mb-4 col-4">Gestion des Produits</h2>
+
+        <!-- Barre de recherche -->
+        <div class="mb-3 col-6 offset-1">
+            <input type="text" id="searchInput" class="form-control" placeholder="Rechercher un produit...">
+        </div>
+    </div>
+
+    <!-- Formulaire d'ajout/modification -->
+    <form id="productForm">
+        <input type="hidden" id="productId">
+        <div class="mb-3">
+            <label class="form-label">Référence</label>
+            <input type="text" class="form-control" id="reference" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Désignation</label>
+            <input type="text" class="form-control" id="designation" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Quantité</label>
+            <input type="number" class="form-control" id="quantity" required>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">Prix</label>
+            <input type="number" class="form-control" id="price" required>
+        </div>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
+    </form>
+
+    <hr>
+
+    <!-- Tableau des produits -->
+    <h3>Liste des Produits</h3>
+    <table class="table table-bordered mt-3">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Référence</th>
+            <th>Désignation</th>
+            <th>Quantité</th>
+            <th>Prix</th>
+            <th>Actions</th>
+        </tr>
+        </thead>
+        <tbody id="productTableBody">
+        <!-- Les produits seront affichés ici -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    $(document).ready(function () {
+        loadProducts();
+
+        // Ajouter ou mettre à jour un produit
+        $("#productForm").submit(function (event) {
+            event.preventDefault();
+            let id = $("#productId").val();
+            let productData = {
+                reference: $("#reference").val(),
+                designation: $("#designation").val(),
+                quantity: $("#quantity").val(),
+                price: $("#price").val()
+            };
+
+            if (id) {
+                updateProduct(id, productData);
+            } else {
+                addProduct(productData);
+            }
+        });
+
+        // Recherche dynamique
+        $("#searchInput").on("keyup", function () {
+            let searchText = $(this).val().toLowerCase();
+            $("#productTableBody tr").filter(function () {
+                $(this).toggle($(this).text().toLowerCase().indexOf(searchText) > -1);
+            });
+        });
+
+
+    });
+
+    // Charger les produits
+    function loadProducts() {
+        $.ajax({
+            url: "/api/products",
+            type: "GET",
+            success: function (products) {
+                let rows = "";
+                $.each(products, function (index, product) {
+                    rows += `<tr>
+                        <td>${product.id}</td>
+                        <td>${product.reference}</td>
+                        <td>${product.designation}</td>
+                        <td>${product.quantity}</td>
+                        <td>${product.price}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" onclick="editProduct(${product.id})">Modifier</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteProduct(${product.id})">Supprimer</button>
+                        </td>
+                    </tr>`;
+                });
+                $("#productTableBody").html(rows);
+            },
+            error: function () {
+                alert("Erreur lors du chargement des produits.");
+            }
+        });
+    }
+
+    // Ajouter un produit
+    function addProduct(productData) {
+        $.ajax({
+            url: "/api/products",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(productData),
+            success: function () {
+                alert("Produit ajouté avec succès !");
+                $("#productForm")[0].reset();
+                loadProducts();
+            },
+            error: function () {
+                alert("Erreur lors de l'ajout du produit.");
+            }
+        });
+    }
+
+    // Récupérer un produit pour modification
+    function editProduct(id) {
+        $.ajax({
+            url: `/api/products/${id}`,
+            type: "GET",
+            success: function (product) {
+                $("#productId").val(product.id);
+                $("#reference").val(product.reference);
+                $("#designation").val(product.designation);
+                $("#quantity").val(product.quantity);
+                $("#price").val(product.price);
+            },
+            error: function () {
+                alert("Erreur lors de la récupération du produit.");
+            }
+        });
+    }
+
+    // Mettre à jour un produit
+    function updateProduct(id, productData) {
+        $.ajax({
+            url: `/api/products/${id}`,
+            type: "PUT",
+            contentType: "application/json",
+            data: JSON.stringify(productData),
+            success: function () {
+                alert("Produit mis à jour avec succès !");
+                $("#productForm")[0].reset();
+                $("#productId").val("");
+                loadProducts();
+            },
+            error: function () {
+                alert("Erreur lors de la mise à jour du produit.");
+            }
+        });
+    }
+
+    // Supprimer un produit
+    function deleteProduct(id) {
+        if (confirm("Voulez-vous vraiment supprimer ce produit ?")) {
+            $.ajax({
+                url: `/api/products/${id}`,
+                type: "DELETE",
+                success: function () {
+                    alert("Produit supprimé !");
+                    loadProducts();
+                },
+                error: function () {
+                    alert("Erreur lors de la suppression.");
+                }
+            });
+        }
+    }
+</script>
+
+</body>
+</html>

@@ -3,7 +3,6 @@ import com.jgotechmaker.debut.entities.Product;
 import com.jgotechmaker.debut.services.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
 
 @RestController
@@ -33,5 +32,9 @@ public class ProductController {
     public Product updateProduct(@PathVariable Integer id, @RequestBody Product updatedProduct) {
         updatedProduct.setId(id);
         return productService.updateProduct(updatedProduct);
+    }
+    @DeleteMapping("/products/{id}")
+    public void deleteProductById(@PathVariable Integer id) {
+        productService.deleteProductById(id);
     }
 }
