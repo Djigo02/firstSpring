@@ -6,44 +6,100 @@
     <title>Gestion des Produits</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .card {
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        h2 {
+            color: #343a40;
+            font-weight: bold;
+        }
+
+        input.form-control {
+            border-radius: 8px;
+        }
+
+        button.btn-primary {
+            background: #007bff;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            transition: 0.3s;
+        }
+
+        button.btn-primary:hover {
+            background: #0056b3;
+        }
+
+        .table {
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .table thead {
+            background: #007bff;
+            color: white;
+        }
+
+        .table tbody tr:hover {
+            background: #f1f1f1;
+            cursor: pointer;
+        }
+
+        .table th, .table td {
+            text-align: center;
+            vertical-align: middle;
+        }
+
+    </style>
 </head>
 <body>
 <div class="container mt-5">
-    <div class="row">
-        <h2 class="mb-4 col-4">Gestion des Produits</h2>
 
-        <!-- Barre de recherche -->
-        <div class="mb-3 col-6 offset-1">
-            <input type="text" id="searchInput" class="form-control" placeholder="Rechercher un produit...">
+    <div class="card col-10 offset-1">
+        <div class="row">
+            <h2 class="mb-4 col-4">Gestion des Produits</h2>
+            <div class="mb-3 col-6 offset-1">
+                <input type="text" id="searchInput" class="form-control" placeholder="Rechercher un produit...">
+            </div>
         </div>
+        <form id="productForm">
+            <input type="hidden" id="productId">
+            <div class="mb-3">
+                <label class="form-label">Référence</label>
+                <input type="text" class="form-control" id="reference">
+                <span class="text-danger error-message"></span>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Désignation</label>
+                <input type="text" class="form-control" id="designation">
+                <span class="text-danger error-message"></span>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Quantité</label>
+                <input type="number" class="form-control" id="quantity">
+                <span class="text-danger error-message"></span>
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Prix</label>
+                <input type="number" class="form-control" id="price">
+                <span class="text-danger error-message"></span>
+            </div>
+            <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </form>
     </div>
 
-    <!-- Formulaire d'ajout/modification -->
-    <form id="productForm">
-        <input type="hidden" id="productId">
-        <div class="mb-3">
-            <label class="form-label">Référence</label>
-            <input type="text" class="form-control" id="reference" required>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Désignation</label>
-            <input type="text" class="form-control" id="designation" required>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Quantité</label>
-            <input type="number" class="form-control" id="quantity" required>
-        </div>
-        <div class="mb-3">
-            <label class="form-label">Prix</label>
-            <input type="number" class="form-control" id="price" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Enregistrer</button>
-    </form>
 
-    <hr>
-
-    <!-- Tableau des produits -->
-    <h3>Liste des Produits</h3>
+<!--    <h3 class="mt-2">Liste des Produits</h3>-->
     <table class="table table-bordered mt-3">
         <thead>
         <tr>
@@ -55,9 +111,7 @@
             <th>Actions</th>
         </tr>
         </thead>
-        <tbody id="productTableBody">
-        <!-- Les produits seront affichés ici -->
-        </tbody>
+        <tbody id="productTableBody"></tbody>
     </table>
 </div>
 
@@ -65,25 +119,25 @@
     $(document).ready(function () {
         loadProducts();
 
-        // Ajouter ou mettre à jour un produit
         $("#productForm").submit(function (event) {
             event.preventDefault();
-            let id = $("#productId").val();
-            let productData = {
-                reference: $("#reference").val(),
-                designation: $("#designation").val(),
-                quantity: $("#quantity").val(),
-                price: $("#price").val()
-            };
+            if (validateForm()) {
+                let id = $("#productId").val();
+                let productData = {
+                    reference: $("#reference").val(),
+                    designation: $("#designation").val(),
+                    quantity: $("#quantity").val(),
+                    price: $("#price").val()
+                };
 
-            if (id) {
-                updateProduct(id, productData);
-            } else {
-                addProduct(productData);
+                if (id) {
+                    updateProduct(id, productData);
+                } else {
+                    addProduct(productData);
+                }
             }
         });
 
-        // Recherche dynamique
         $("#searchInput").on("keyup", function () {
             let searchText = $(this).val().toLowerCase();
             $("#productTableBody tr").filter(function () {
@@ -91,10 +145,38 @@
             });
         });
 
+        function validateForm() {
+            let isValid = true;
+            $(".error-message").text("");
 
+            let reference = $("#reference").val().trim();
+            if (reference.length < 4 || reference.length > 12) {
+                $("#reference").next(".error-message").text("La taille doit être entre 4 et 12.");
+                isValid = false;
+            }
+
+            let designation = $("#designation").val().trim();
+            if (designation === "") {
+                $("#designation").next(".error-message").text("Ce champ ne peut pas être vide.");
+                isValid = false;
+            }
+
+            let price = parseFloat($("#price").val());
+            if (price <= 100 || isNaN(price)) {
+                $("#price").next(".error-message").text("Le prix doit être supérieur à 100.");
+                isValid = false;
+            }
+
+            let quantity = parseInt($("#quantity").val());
+            if (quantity < 0 || isNaN(quantity)) {
+                $("#quantity").next(".error-message").text("La quantité ne peut pas être négative.");
+                isValid = false;
+            }
+
+            return isValid;
+        }
     });
 
-    // Charger les produits
     function loadProducts() {
         $.ajax({
             url: "/api/products",
@@ -122,7 +204,6 @@
         });
     }
 
-    // Ajouter un produit
     function addProduct(productData) {
         $.ajax({
             url: "/api/products",
@@ -140,7 +221,6 @@
         });
     }
 
-    // Récupérer un produit pour modification
     function editProduct(id) {
         $.ajax({
             url: `/api/products/${id}`,
@@ -158,7 +238,6 @@
         });
     }
 
-    // Mettre à jour un produit
     function updateProduct(id, productData) {
         $.ajax({
             url: `/api/products/${id}`,
@@ -177,7 +256,6 @@
         });
     }
 
-    // Supprimer un produit
     function deleteProduct(id) {
         if (confirm("Voulez-vous vraiment supprimer ce produit ?")) {
             $.ajax({
